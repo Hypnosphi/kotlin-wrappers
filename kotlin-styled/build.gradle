@@ -1,9 +1,49 @@
+configurePublishingWithNPM(styled_version)
+
 applyKotlinJS()
 
-configurePublishingWithNPM(styled_version)
+apply plugin: 'com.moowork.node'
 
 dependencies {
     compile project(":kotlin-css")
     compile project(":kotlin-css:kotlin-css-js")
     compile project(':kotlin-react-dom')
+    compile project(":kotlin-mocha")
+    // testCompile "org.jetbrains:kotlin-mocha:3.0.1-pre.48-kotlin-1.2.60"
+    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
 }
+
+[compileKotlin2Js, compileTestKotlin2Js]*.configure {
+    kotlinOptions.moduleKind = "commonjs"
+}
+
+task populateNodeModules(type: Copy, dependsOn: compileKotlin2Js) {
+    from compileKotlin2Js.destinationDir
+
+    configurations.testCompile.each {
+        from zipTree(it.absolutePath).matching { include '*.js' }
+    }
+
+    from compileKotlin2Js.outputFile
+
+    into "node_modules"
+}
+
+node {
+    download = true
+}
+
+task installMocha(type: NpmTask) {
+    args = ['install', 'mocha', 'styled-components', 'react', 'react-dom', 'inline-style-prefixer']
+}
+
+task runMocha(type: NodeTask, dependsOn: [compileTestKotlin2Js, populateNodeModules, installMocha]) {
+    script = file("node_modules/mocha/bin/mocha")
+    args = [compileTestKotlin2Js.outputFile]
+}
+
+test.dependsOn runMocha
