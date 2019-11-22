@@ -1,114 +1,49 @@
 package example
 
-import kotlinext.js.*
-import kotlinx.html.*
-import react.*
-import react.dom.*
+import react.Component
+import react.RProps
+import react.dom.div
+import react.dom.li
+import react.dom.render
+import react.dom.ul
+import react.router.dom.hashRouter
+import react.router.dom.route
+import react.router.dom.routeLink
+import react.router.dom.switch
+import kotlin.browser.document
+import kotlin.browser.window
+import kotlin.reflect.KClass
 
-enum class Theme(val backgroundColor: String, val color: String) {
-    LIGHT("white", "black"),
-    DARK("black", "white")
-}
+@Suppress("UNCHECKED_CAST")
+val examples = mapOf(
+    "todo" to Todo::class,
+//    "product" to Product::class, TODO
+    "TicTacToe" to TicTacToe::class,
+    "axios" to AxiosSearch::class
+) as Map<String, KClass<Component<*, *>>>
 
-val ThemeContext = createContext(Theme.LIGHT)
-
-fun RBuilder.app(props: RProps) {
-    ThemeContext.Provider(Theme.DARK) {
-        div {
-            ThemeContext.Consumer { theme ->
-                div {
-                    attrs.jsStyle {
-                        color = theme.color
-                        backgroundColor = theme.backgroundColor
+fun main(args: Array<String>) {
+    window.onload = {
+        render(document.getElementById("app")) {
+            hashRouter {
+                switch {
+                    for ((name, component) in examples) {
+                        route("/$name", component = component)
                     }
-                    +"Hello from React 16.3"
-                }
-            }
 
-            // Three different ways to define style properties are listed below
-            attrs.jsStyle = js {
-                width = "100px"
-            }
-
-            attrs {
-                jsStyle {
-                    height = "100px"
-                }
-            }
-
-            attrs.jsStyle.backgroundColor = "red"
-
-            // Setting an attribute
-            attrs.attributes["title"] = "My title"
-
-            // Setting a custom attribute
-            attrs["my-attribute"] = 100
-            attrs["class"] = "class"
-
-            // Appending children from props
-            props.children()
-
-            // Unescaped content
-            attrs.unsafe { +"&nbsp;" }
-
-
-            // Form elements https://facebook.github.io/react/docs/forms.html
-
-            input {
-                attrs.defaultValue = "foo"
-            }
-
-            input {
-                attrs {
-                    type = InputType.checkBox
-                    defaultChecked = true
-                }
-            }
-
-            textArea {
-                attrs {
-                    value = "bar"
-                    defaultValue = "foobar"
-                }
-            }
-
-            val options = listOf("foo", "bar", "baz")
-
-            select {
-                attrs.value = "foo"
-
-                options.forEach {
-                    option {
-                        key = it
-                        attrs.value = it
-                        +it
-                    }
-                }
-            }
-
-            select {
-                attrs.multiple = true
-                attrs.values = setOf("foo", "bar")
-
-                options.forEach {
-                    option {
-                        key = it
-                        attrs.value = it
-                        +it
-                    }
-                }
-            }
-
-            select {
-                attrs.multiple = true
-                attrs.values += "foo"
-                attrs.values += "bar"
-
-                options.forEach {
-                    option {
-                        key = it
-                        attrs.value = it
-                        +it
+                    route("/") {
+                        div {
+                            ul {
+                                for ((name, _) in examples) {
+                                    li {
+                                        routeLink(to = name) {
+                                            +name
+                                        }
+                                    }
+                                }
+                            }
+                            app(object : RProps {})
+                        }
                     }
                 }
             }

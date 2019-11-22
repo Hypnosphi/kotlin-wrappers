@@ -11,7 +11,7 @@ import react.dom.*
  */
 
 interface TodoProps : RProps {
-    var initialItems: List<String?>
+    var initialItems: List<String?>?
 }
 
 interface TodoState : RState {
@@ -21,7 +21,7 @@ interface TodoState : RState {
 
 class Todo(props: TodoProps) : RComponent<TodoProps, TodoState>(props) {
     override fun TodoState.init(props: TodoProps) {
-        items = props.initialItems
+        items = props.initialItems ?: emptyList()
         text = ""
     }
 
